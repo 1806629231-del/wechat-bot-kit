@@ -15,14 +15,15 @@
    - 一台放在国内、长期开着的备用安卓手机或电脑，当出口用。
    - 一个 Tailscale 账号。
    - 一个大模型 API Key，任何 OpenAI 兼容接口都行，比如 DeepSeek。
-2. **配手机或电脑出口代理**
-   - 照 `proxy/README.md` 操作：出口设备装 Tailscale，再开一个带账号密码的 SOCKS5（端口 1080）。
-   - Windows 电脑跑 `proxy/install-gost-windows.ps1`。
-   - 记下出口设备的 Tailscale IP，它是 100.x 开头的。
+2. **配手机或电脑出口代理（能远程就由 Bot 自己做）**
+   - Bot 先调 `ListMachines`，看出口 Windows 电脑有没有连到 Grok Bot。
+   - **已连上**：Bot 带 machineId 远程在那台电脑上检测出口 IP（`curl.exe -s myip.ipip.net`，必须是国内运营商），再用管理员权限跑 `proxy/install-gost-windows.ps1`（不传密码，脚本自动生成），然后自己读回 Tailscale IP、SOCKS 用户名和密码，写进 box 上 chmod 600 的密钥文件。主人只需要点本地执行审批，Tailscale 第一次登录时点一下。不用主人抄、不在聊天里显示密码。
+   - **没连上**：Bot 先问主人要不要把那台电脑连到 Grok Bot（连上后全程 Bot 来做）。主人不愿意、或出口是安卓手机，才手动做：手机装 Tailscale（和 box 同一账号）+ hev socks5，设用户名密码、只监听 Tailscale IP 的 1080、关电池优化。账号密码由 Bot 用密钥输入框收，**不要发在聊天里**。详见 `proxy/README.md`。
+   - 最后 Bot 从 box 经 SOCKS 测一次出口，确认在中国大陆。
 3. **在 box 上填代理信息**
    ```bash
    bash install.sh            # 第一次运行会生成 ~/secrets/phone-socks.env，然后退出
-   nano ~/secrets/phone-socks.env   # 填 PHONE_SOCKS_HOST/USER/PASS
+   nano ~/secrets/phone-socks.env   # 填 PHONE_SOCKS_HOST/USER/PASS（Bot 远程装好时已自动写好，可跳过）
    bash install.sh            # 正式安装
    ```
    第一次装 Tailscale 时，终端会打印一个登录链接，在浏览器里打开授权即可。

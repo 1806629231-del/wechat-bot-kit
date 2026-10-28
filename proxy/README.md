@@ -1,7 +1,7 @@
 # wechat-domestic-exit-proxy – portable pack
 
 Give a box/cloud-hosted Linux WeChat a stable mainland-China exit IP by routing only WeChat through a SOCKS5
-proxy on a domestic device reached over Tailscale. Read SKILL.md first (why, lessons, security).
+proxy on a domestic device reached over Tailscale. Bot 侧流程见 wechat-bot-getting-started 第 3 步。
 
 ## Contents
 - `SKILL.md` – the skill
@@ -21,12 +21,15 @@ side router). Keep the device in ONE place on ONE network forever (moving change
    (random, ≥16 chars), start on boot ON, battery optimization OFF, app launch manual (auto/associated/background ON).
 4. Confirm the LAN IP and 127.0.0.1 are NOT listening; only the 100.x address.
 
-## Option B – Windows PC (backup)
-Run in an elevated PowerShell: `powershell -ExecutionPolicy Bypass -File install-gost-windows.ps1 -User <SOCKS_USER>`
-(password auto-generated if omitted). It downloads gost from the official go-gost GitHub releases, binds to the
-Tailscale IP, adds a firewall rule limited to 100.64.0.0/10, sets sleep=never, autostarts at boot and checks the
-exit country. If it warns "exit is not CN": the PC's gateway goes through a side router/VPN – use a different
-device or add GEOIP-CN direct on the router; don't move a PC off the foreign route if the owner needs it.
+## 方案 B – Windows 电脑（备用）：优先由 Bot 远程完成
+1. Bot 先调 `ListMachines`，看这台 Windows 电脑有没有连到 Grok Bot。
+2. **已连上**：Bot 带 machineId 远程执行，主人只在弹出的本地执行审批里点同意：
+   - 检测出口 IP：`curl.exe -s myip.ipip.net`，必须是国内运营商；不是就先问主人网关/代理软件怎么设，别硬装。
+   - 用管理员权限跑 `powershell -ExecutionPolicy Bypass -File install-gost-windows.ps1 -User <SOCKS_USER>`，不传密码让脚本自动生成。脚本会下载官方 gost、只绑定 Tailscale IP、防火墙只放行 100.64.0.0/10、关休眠、开机自启并检查出口国家。
+   - Bot 自己读回 Tailscale IP、SOCKS 用户名和密码，写进 box 上 chmod 600 的密钥文件。不要让主人抄，不在聊天里显示密码。
+   - 只有 Tailscale 第一次登录需要主人点一下。
+3. **没连上**：Bot 先问一句要不要把电脑连到 Grok Bot。主人不愿意时才手动跑上面的脚本，账号密码由 Bot 用密钥输入框收，绝不发在聊天里。
+4. 脚本提示 "exit is not CN"：说明网关走了旁路由/VPN，换设备或在路由上加 GEOIP-CN 直连；主人需要国外线路时不要强行改。
 
 ## Box side
 ```bash
